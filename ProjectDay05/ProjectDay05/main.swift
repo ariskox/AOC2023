@@ -180,7 +180,7 @@ extension Mapper {
                     didFindAny = true
                     untranslatedRanges.removeFirst()
 
-                    let (untrans, overlapping) = intersect(original: origRange, mask: mapperRange.from)
+                    let (untrans, overlapping) = intersectRange(original: origRange, with: mapperRange.from)
                     untranslatedRanges.append(contentsOf: untrans)
                     newRanges.append(contentsOf: overlapping.map { mapperRange.mapRange(range: $0) } )
                 }
@@ -193,37 +193,37 @@ extension Mapper {
         return newRanges
     }
 
-
-    func intersect(original: ClosedRange<Int>, mask: ClosedRange<Int>) -> (unaffectedRanges: [ClosedRange<Int>], overlapingRanges: [ClosedRange<Int>]) {
+    func intersectRange(original: ClosedRange<Int>, with mask: ClosedRange<Int>) -> (unaffectedRanges: [ClosedRange<Int>], overlapingRanges: [ClosedRange<Int>]) {
         var unaffectedRanges = [ClosedRange<Int>]()
         var overlapingRanges = [ClosedRange<Int>]()
 
         if original.lowerBound < mask.lowerBound  {
             if original.upperBound <= mask.upperBound {
                 // 2 ranges
-                let untranslated = original.lowerBound...(mask.lowerBound-1)
-                let toBeTranslated = mask.lowerBound...original.upperBound
-                unaffectedRanges.append(untranslated)
-                overlapingRanges.append(toBeTranslated)
+                let unaffected = original.lowerBound...(mask.lowerBound-1)
+                let overlapping = mask.lowerBound...original.upperBound
+                unaffectedRanges.append(unaffected)
+                overlapingRanges.append(overlapping)
             } else {
                 // 3 ranges
-                let untranslated = original.lowerBound...(mask.lowerBound-1)
-                let toBeTranslated = mask.lowerBound...mask.upperBound
-                let untranslated2 = mask.upperBound...original.upperBound
-                unaffectedRanges.append(untranslated)
-                overlapingRanges.append(toBeTranslated)
-                unaffectedRanges.append(untranslated2)}
+                let unaffected1 = original.lowerBound...(mask.lowerBound-1)
+                let overlapping = mask.lowerBound...mask.upperBound
+                let unaffected2 = mask.upperBound...original.upperBound
+                unaffectedRanges.append(unaffected1)
+                unaffectedRanges.append(unaffected2)
+                overlapingRanges.append(overlapping)
+            }
         } else {
             if original.upperBound <= mask.upperBound {
-                // 1 range. SOSTO
-                let toBeTranslated = original.lowerBound...original.upperBound
-                overlapingRanges.append(toBeTranslated)
+                // 1 range
+                let overlapping = original.lowerBound...original.upperBound
+                overlapingRanges.append(overlapping)
             } else {
                 // 2 ranges
-                let toBeTranslated = original.lowerBound...mask.upperBound
-                let untranslated = (mask.upperBound+1)...original.upperBound
-                overlapingRanges.append(toBeTranslated)
-                unaffectedRanges.append(untranslated)
+                let overlapping = original.lowerBound...mask.upperBound
+                let unaffected = (mask.upperBound+1)...original.upperBound
+                overlapingRanges.append(overlapping)
+                unaffectedRanges.append(unaffected)
             }
         }
 
