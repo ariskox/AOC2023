@@ -18,6 +18,7 @@ extension Race {
 
     func solve() -> Int {
         // time * (duration - time) > distance
+        // Solve quadratic equation
 
         let discriminant = duration*duration - 4 * distance
         assert(discriminant >= 0, "No solution")
@@ -28,14 +29,19 @@ extension Race {
         let t2 = (Double(duration) + root) / 2
         assert(t1 > 0)
         assert(t2 > 0)
+        assert(t1 != t2)
 
         let t1rounded = Int(ceil(t1))
         let t2rounded = Int(floor(t2))
+        assert(t1rounded != t2rounded)
 
-        let t1valid = t1rounded * (duration - t1rounded) > distance
-        let t2valid = t2rounded * (duration - t2rounded) > distance
+        let t1IsValid = t1rounded * (duration - t1rounded) > distance
+        let t2IsValid = t2rounded * (duration - t2rounded) > distance
 
-        return t2rounded - t1rounded + 1 + ( t1valid ? 0 : -1) + (t2valid ? 0 : -1)
+        let result = t2rounded - t1rounded - 1 + ( t1IsValid ? 1 : 0) + (t2IsValid ? 1 : 0)
+        assert(result >= 1)
+
+        return result
     }
 }
 
