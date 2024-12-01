@@ -58,8 +58,16 @@ extension Puzzle {
             let node = Node(name: name, left: .unresolved(cmps2[0]), right: .unresolved(cmps2[1]))
             nodes.append(node)
         }
-        let puzzle = Puzzle(instructions: instructions, nodes: nodes)
 
+        // Check for duplicates
+        var dict: [String: Int] = [:]
+        for node in nodes {
+            dict[node.name, default: 0] += 1
+        }
+        let values = dict.values
+        assert(values.allSatisfy { $0 == 1 })
+
+        let puzzle = Puzzle(instructions: instructions, nodes: nodes)
         return puzzle
     }
 }
@@ -84,17 +92,17 @@ extension Puzzle {
         }
     }
 
-    func solve() -> Int {
+    func solve(for nodeName: String, suffix: String) -> Int {
         for node in nodes {
             resolveIfNeeded(node: node)
         }
 
         var count = 0
-        var current = getNode(with: "AAA")
-        var instructions = self.instructions
+        var current = getNode(with: nodeName)
+        var iIndex = 0
 
-        while current.name != "ZZZ" {
-            let instruction = instructions.removeFirst()
+        while !current.name.hasSuffix(suffix) {
+            let instruction = instructions[iIndex]
             switch instruction {
             case .L:
                 switch current.left {
@@ -111,7 +119,7 @@ extension Puzzle {
                     current = node
                 }
             }
-            instructions.append(instruction)
+            iIndex = (iIndex + 1) % instructions.count
             count += 1
         }
 
@@ -129,6 +137,29 @@ class Node {
         self.left = left
         self.right = right
     }
+
+    var getLeft: Node {
+        switch left {
+        case .resolved(let node):
+            return node
+        case .unresolved:
+            fatalError()
+        }
+    }
+    var getRight: Node {
+        switch right {
+        case .resolved(let node):
+            return node
+        case .unresolved:
+            fatalError()
+        }
+    }
+}
+
+extension Node: CustomDebugStringConvertible {
+    var debugDescription: String {
+        "\(name) \(left) \(right)"
+    }
 }
 
 enum NodeState {
@@ -136,27 +167,96 @@ enum NodeState {
     case resolved(Node)
 }
 
+extension NodeState: CustomDebugStringConvertible {
+    var debugDescription: String {
+        switch self {
+        case .unresolved(let name):
+            return "unresolved(\(name))"
+        case .resolved(let node):
+            return "resolved(\(node.name))"
+        }
+    }
+}
+
 // MARK: - Part 1
 
 func day08_Part1(url: URL) async throws -> Int {
     let lines = try await url.lines.collect()
     let puzzle = Puzzle.create(from: lines)
-    return puzzle.solve()
+    return puzzle.solve(for: "AAA", suffix: "ZZZ")
 }
 
 // MARK: - Part 2
 
+extension Puzzle {
+    func getNodesEnding(in name: String) -> [Node] {
+        nodes.filter { $0.name.hasSuffix(name) }
+    }
+
+    func solve2() -> Int {
+        for node in nodes {
+            resolveIfNeeded(node: node)
+        }
+
+        let current: [Node] = getNodesEnding(in: "A")
+        let tries = current.map { solve(for: $0.name, suffix: "Z") }
+
+        // solved MXA in 16343
+        // solved VQA in 11911
+        // solved CBA in 20221
+        // solved JBA in 21883
+        // solved AAA in 13019
+        // solved HSA in 19667
+
+        // 13524038372771
+
+        // Find LCM of all the above numbers
+
+        var totalLCM = 1
+
+        for number in tries {
+            totalLCM = lcm(totalLCM, number)
+        }
+
+        return totalLCM
+    }
+}
+
+/*
+ Returns the Greatest Common Divisor of two numbers.
+ */
+func gcd(_ x: Int, _ y: Int) -> Int {
+    var a = 0
+    var b = max(x, y)
+    var r = min(x, y)
+
+    while r != 0 {
+        a = b
+        b = r
+        r = a % b
+    }
+    return b
+}
+
+/*
+ Returns the least common multiple of two numbers.
+ */
+func lcm(_ x: Int, _ y: Int) -> Int {
+    return x / gcd(x, y) * y
+}
+
 func day08_Part2(url: URL) async throws -> Int {
     let lines = try await url.lines.collect()
     let puzzle = Puzzle.create(from: lines)
-    return puzzle.solve()
+    return puzzle.solve2()
 }
 
 // MARK: - Run
 
 let exampleURL = Bundle.main.url(forResource: "example", withExtension: "txt")!
+let example2URL = Bundle.main.url(forResource: "example2", withExtension: "txt")!
 let inputURL = Bundle.main.url(forResource: "input", withExtension: "txt")!
 
 debugPrint(try await day08_Part1(url: inputURL)) // 13019
 
-debugPrint(try await day08_Part2(url: exampleURL)) //
+debugPrint(try await day08_Part2(url: inputURL)) //

@@ -28,6 +28,7 @@
 			buildPhase = 7281503B2CFCF99600234517 /* CopyFiles */;
 			membershipExceptions = (
 				example.txt,
+				example2.txt,
 				input.txt,
 			);
 		};
