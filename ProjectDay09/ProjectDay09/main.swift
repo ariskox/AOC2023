@@ -55,16 +55,7 @@ extension Report {
         var sum = 0
 
         for history in histories {
-            var subhistories = [History]()
-            var allValuesAreZero = false
-            var current = history
-
-            while !allValuesAreZero {
-                let new = current.getDiffs()
-                subhistories.append(new)
-                allValuesAreZero = new.allIsZero()
-                current = new
-            }
+            let subhistories = history.getAllDiffs()
             let subsum = subhistories.map { $0.values.last! }.reduce(0, +) + history.values.last!
             sum += subsum
         }
@@ -81,6 +72,20 @@ extension History {
 
     func allIsZero() -> Bool {
         values.allSatisfy { $0 == 0 }
+    }
+
+    func getAllDiffs() -> [History] {
+        var subhistories = [History]()
+        var allValuesAreZero = false
+        var current = self
+
+        while !allValuesAreZero {
+            let new = current.getDiffs()
+            subhistories.append(new)
+            allValuesAreZero = new.allIsZero()
+            current = new
+        }
+        return subhistories
     }
 }
 
@@ -99,17 +104,7 @@ extension Report {
         var sum = 0
 
         for history in histories {
-            var subhistories = [History]()
-            var allValuesAreZero = false
-            var current = history
-
-            while !allValuesAreZero {
-                let new = current.getDiffs()
-                subhistories.append(new)
-                allValuesAreZero = new.allIsZero()
-                current = new
-            }
-            let allHistories = [history] + subhistories
+            let allHistories = [history] + history.getAllDiffs()
             var subsum = 0
 
             for history in allHistories.reversed() {
