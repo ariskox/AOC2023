@@ -15,6 +15,16 @@ extension AsyncSequence {
     }
 }
 
+extension URL {
+    func nonEmptyLines() throws -> [String] {
+        let lines = try String(contentsOf: self, encoding: .utf8)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        assert(lines.count > 0)
+        return lines
+    }
+}
+
 extension Int {
     static func create(from string: String) throws -> Int {
         guard let value = Int(string) else {
@@ -91,8 +101,8 @@ extension History {
 
 // MARK: - Part 1
 
-func day09_Part1(url: URL) async throws -> Int {
-    let lines = try await url.lines.collect()
+func day09_Part1(url: URL) throws -> Int {
+    let lines = try url.nonEmptyLines()
     let report = try Report.create(from: lines)
     return report.solve()
 }
@@ -117,8 +127,8 @@ extension Report {
     }
 }
 
-func day09_Part2(url: URL) async throws -> Int {
-    let lines = try await url.lines.collect()
+func day09_Part2(url: URL) throws -> Int {
+    let lines = try url.nonEmptyLines()
     let report = try Report.create(from: lines)
     return report.solve2()
 }
@@ -128,6 +138,6 @@ func day09_Part2(url: URL) async throws -> Int {
 let exampleURL = Bundle.main.url(forResource: "example", withExtension: "txt")!
 let inputURL = Bundle.main.url(forResource: "input", withExtension: "txt")!
 
-debugPrint(try await day09_Part1(url: inputURL)) // 1757008019
+debugPrint(try day09_Part1(url: inputURL)) // 1757008019
 
-debugPrint(try await day09_Part2(url: inputURL)) // 995
+debugPrint(try day09_Part2(url: inputURL)) // 995
