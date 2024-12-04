@@ -50,7 +50,6 @@ extension Collection where Self.Iterator.Element: RandomAccessCollection {
 enum Item: String {
     case space = "."
     case galaxy = "#"
-    case expandedSpace = "X"
 }
 
 struct Coordinate {
@@ -59,14 +58,12 @@ struct Coordinate {
 }
 
 class Map {
-    var width: Int
-    var height: Int
+    private var items: [[Item]]
 
-    var items: [[Item]]
+    private var emptyLineIndices: [Int] = []
+    private var emptyColumnIndices: [Int] = []
 
-    init(width: Int, height: Int, items: [[Item]]) {
-        self.width = width
-        self.height = height
+    init(items: [[Item]]) {
         self.items = items
     }
 }
@@ -80,38 +77,29 @@ extension Map {
             assert(row.count > 0)
             items.append(row)
         }
-        assert(items.count > 0 )
-        let w = items.first!.count
-        let h = items.count
-        return Map(width: w, height: h, items: items)
+        assert(items.count > 0)
+        assert(items.count == items[0].count)
+        assert(items.count == items[items.count-1].count)
+        return Map(items: items)
     }
 
-    func expandEmptySpaces() {
+    func getEmptyLinesIndices() -> [Int] {
         let emptyLinesIdx = items.enumerated().filter { $0.element.allSatisfy { $0 == .space } }.map { $0.offset }
 
+        return emptyLinesIdx
+    }
+
+    func getEmptyColumnsIndices() -> [Int] {
         let transposed = items.transposed()
         let emptyColumnsIdx = transposed.enumerated().filter { $0.element.allSatisfy { $0 == .space } }.map { $0.offset }
-
-        for emptyLineIdx in emptyLinesIdx.reversed() {
-            let newLine = Array(repeating:  Item.expandedSpace, count: width)
-            items.insert(newLine, at: emptyLineIdx)
-        }
-
-        for emptyColumnIdx in emptyColumnsIdx.reversed() {
-            for i in 0..<items.count {
-                items[i].insert(.expandedSpace, at: emptyColumnIdx)
-            }
-        }
-
-        width = items.first!.count
-        height = items.count
+        return emptyColumnsIdx
     }
 
     func getGalaxies() -> [Coordinate] {
         var coords = [Coordinate]()
 
-        for y in 0..<height {
-            for x in 0..<width {
+        for y in 0..<items.count {
+            for x in 0..<items.count {
                 if items[y][x] == .galaxy {
                     coords.append(Coordinate(x: x, y: y))
                 }
@@ -124,23 +112,40 @@ extension Map {
 
 extension Map {
 
-    func solve1() -> Int {
+    func solve(expandedSpaceWeight: Int) -> Int {
         var sumOfDistances = 0
 
-        expandEmptySpaces()
         let galaxies = getGalaxies()
+        emptyLineIndices = getEmptyLinesIndices()
+        emptyColumnIndices = getEmptyColumnsIndices()
 
         for (idx, galaxy1) in galaxies.dropLast().enumerated() {
             for galaxy2 in galaxies[(idx+1)...] {
                 let dxNormalSpace = abs(galaxy1.x - galaxy2.x)
                 let dyNormalSpace = abs(galaxy1.y - galaxy2.y)
-                let distance = dxNormalSpace + dyNormalSpace
+                let expandedSpace = getExpandedSpaceCount(from: galaxy1, to: galaxy2)
+                let distance = dxNormalSpace + dyNormalSpace + (expandedSpaceWeight - 1) * expandedSpace
                 sumOfDistances += distance
             }
         }
         return sumOfDistances
     }
+}
 
+extension Map {
+    func getExpandedSpaceCount(from: Coordinate, to: Coordinate) -> Int {
+        let minX = min(from.x, to.x)
+        let maxX = max(from.x, to.x)
+        let minY = min(from.y, to.y)
+        let maxY = max(from.y, to.y)
+
+        let columnsCrossed = emptyColumnIndices.filter { $0 >= minX && $0 <= maxX }
+        let linesCrossed = emptyLineIndices.filter { $0 >= minY && $0 <= maxY }
+
+        let count = columnsCrossed.count + linesCrossed.count
+
+        return count
+    }
 }
 
 // MARK: - Part 1
@@ -148,7 +153,7 @@ extension Map {
 func day11_Part1(url: URL) throws -> Int {
     let lines = try url.nonEmptyLines()
     let map = try Map.create(from: lines)
-    return map.solve1()
+    return map.solve(expandedSpaceWeight: 2)
 }
 
 // MARK: - Part 2
@@ -156,55 +161,7 @@ func day11_Part1(url: URL) throws -> Int {
 func day11_Part2(url: URL) throws -> Int {
     let lines = try url.nonEmptyLines()
     let map = try Map.create(from: lines)
-    return map.solve2()
-}
-
-extension Map {
-    func solve2() -> Int {
-        var sumOfDistances = 0
-
-        expandEmptySpaces()
-        let galaxies = getGalaxies()
-
-        for (idx, galaxy1) in galaxies.dropLast().enumerated() {
-            for galaxy2 in galaxies[(idx+1)...] {
-                let dxNormalSpace = abs(galaxy1.x - galaxy2.x)
-                let dyNormalSpace = abs(galaxy1.y - galaxy2.y)
-
-                let expandedSpace = getExpandedSpaceCount(from: galaxy1, to: galaxy2)
-                let distance = dxNormalSpace + dyNormalSpace - 2 * expandedSpace + 1_000_000 * expandedSpace
-
-                sumOfDistances += distance
-            }
-        }
-        return sumOfDistances
-    }
-
-    func getExpandedSpaceCount(from: Coordinate, to: Coordinate) -> Int {
-        var count = 0
-        let fromX = min(from.x, to.x)
-        let toX = max(from.x, to.x)
-
-        for x in (fromX)...toX {
-            let item = items[from.y][x]
-            if item == .expandedSpace {
-                count += 1
-            }
-        }
-
-        let fromY = min(from.y, to.y)
-        let toY = max(from.y, to.y)
-
-        for y in (fromY)...toY {
-            let item = items[y][from.x]
-            if item == .expandedSpace {
-                count += 1
-            }
-        }
-
-        return count
-    }
-
+    return map.solve(expandedSpaceWeight: 1_000_000)
 }
 
 // MARK: - Run
