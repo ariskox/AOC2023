@@ -107,25 +107,21 @@ extension Line {
             var newLine = self
             if previousItem == .damaged {
                 if newLine.conditions.removeFirst() > 0 {
-                    Self.cache[self] = 0
-                    return 0
+                    return cached(0)
                 }
             }
             let p = newLine.springs.removeFirst()
             newLine.previousItem = p
-            let result = newLine.getSolutionCount(debug: debug + p.rawValue, orig: orig)
-            Self.cache[self] = result
-            return result
+            return cached(newLine.getSolutionCount(debug: debug + p.rawValue, orig: orig))
         case .damaged:
             if conditions[0] <= 0 {
-                Self.cache[self] = 0
-                return 0
+                return cached(0)
             }
             var newLine = self
             let p = newLine.springs.removeFirst()
             newLine.conditions[0] -= 1
             newLine.previousItem = p
-            return newLine.getSolutionCount(debug: debug + p.rawValue, orig: orig)
+            return cached(newLine.getSolutionCount(debug: debug + p.rawValue, orig: orig))
         case .unknown:
             var newLine1 = self
             newLine1.springs[0] = .operational
@@ -135,10 +131,13 @@ extension Line {
             newLine2.springs[0] = .damaged
             let solution2 = newLine2.getSolutionCount(debug: debug, orig: orig)
 
-            let result =  solution1 + solution2
-            Self.cache[self] = result
-            return result
+            return cached(solution1 + solution2)
         }
+    }
+
+    func cached(_ result: Int) -> Int {
+        Self.cache[self] = result
+        return result
     }
 }
 
