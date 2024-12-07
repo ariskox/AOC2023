@@ -134,28 +134,43 @@ extension Puzzle {
     func solve2() -> Int {
         var p = self
 
-        // Puzzle & iteration
-        var seenPuzzles: [Puzzle: Int] = [:]
+        // Puzzle : iteration #
+        var cachedPuzzles: [Puzzle: Int] = [:]
 
-        var remaining = 1_000_000_000
-        var current = 0
+        var remainingCycles = 1_000_000_000
+        var currentCycle = 0
 
-        while remaining > 0 {
+        while remainingCycles > 0 {
             p = p.performCycle()
-            if let previousPuzzleIteration = seenPuzzles[p] {
+            if let puzzleSeenAtIteratationWithNumber = cachedPuzzles[p] {
 
-                let step = current - previousPuzzleIteration
-//                debugPrint("In iteration \(current) found a cycle at \(previousPuzzleIteration) with \(current - previousPuzzleIteration) step difference")
-                let remainder = remaining % step
+                let step = currentCycle - puzzleSeenAtIteratationWithNumber
+                let remainder = remainingCycles % step
+//                debugPrint("In iteration \(current) found a cycle at \(previousPuzzleIteration) with \(current - previousPuzzleIteration) step difference. setting remainder = \(remainder)")
 
-                remaining = remainder
+                remainingCycles = remainder - 1
 
+                // Way 1: Find the puzzle that would be loaded at the end of "remaining turns"
+                if let puzzle = cachedPuzzles.first(where: { $0.value == puzzleSeenAtIteratationWithNumber + remainingCycles })?.key {
+//                    debugPrint("would return load \(puzzle.getLoad())")
+                    return puzzle.getLoad()
+                }
+
+                // Way 2: start over
+//                currentCycle = 0
+//                cachedPuzzles = [:]
+
+                // Way 3: Perform the remaining cycles
+//                while remainingCycles > 1 {
+//                    p = p.performCycle()
+//                    remainingCycles -= 1
+//                }
+//                break
             } else {
-                seenPuzzles[p] = current
-                current += 1
-                remaining -= 1
+                cachedPuzzles[p] = currentCycle
+                currentCycle += 1
+                remainingCycles -= 1
             }
-
         }
 
         return p.getLoad()
@@ -301,7 +316,3 @@ let inputURL = Bundle.main.url(forResource: "input", withExtension: "txt")!
 
 debugPrint(try day14_Part1(url: inputURL)) // 110821
 debugPrint(try day14_Part2(url: inputURL)) // 83516
-
-
-
-
