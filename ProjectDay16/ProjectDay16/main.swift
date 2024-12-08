@@ -207,7 +207,7 @@ extension Beam {
 
 // MARK: - Part 1
 
-func day15_Part1(url: URL) throws -> Int {
+func day16_Part1(url: URL) throws -> Int {
     let lines = try url.nonEmptyLines()
     let map = try Puzzle.create(from: lines)
     return map.solve1()
@@ -215,7 +215,7 @@ func day15_Part1(url: URL) throws -> Int {
 
 // MARK: - Part 2
 
-func day15_Part2(url: URL) throws -> Int {
+func day16_Part2(url: URL) throws -> Int {
     let lines = try url.nonEmptyLines()
     let map = try Puzzle.create(from: lines)
     return map.solve2()
@@ -263,7 +263,7 @@ extension Puzzle {
 let exampleURL = Bundle.main.url(forResource: "example", withExtension: "txt")!
 let inputURL = Bundle.main.url(forResource: "input", withExtension: "txt")!
 
-debugPrint(try day15_Part1(url: inputURL)) // 7074
-debugPrint(try day15_Part2(url: inputURL)) // 7530
+debugPrint(try day16_Part1(url: inputURL)) // 7074
+debugPrint(try day16_Part2(url: inputURL)) // 7530
 
 
