@@ -80,19 +80,6 @@ enum Direction {
         }
     }
 
-//    var reverse: Direction {
-//        switch self {
-//        case .north:
-//            return .south
-//        case .south:
-//            return .north
-//        case .east:
-//            return .west
-//        case .west:
-//            return .east
-//        }
-//    }
-//
     var restAndNotReverse: [Direction] {
         switch self {
         case .north:
@@ -127,11 +114,6 @@ extension Coordinate {
     static func +(lhs: Coordinate, rhs: Vector) -> Coordinate {
         Coordinate(x: lhs.x + rhs.dx, y: lhs.y + rhs.dy)
     }
-}
-
-struct DirectionalCoordinate: Hashable {
-    var coordinate: Coordinate
-    var direction: Direction
 }
 
 // MARK: - Models
